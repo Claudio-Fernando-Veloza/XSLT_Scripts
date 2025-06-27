@@ -1,0 +1,78 @@
+<--! Template that creates a new STEP Import Xml file  for the creation of a new attribute into the STEP System ,when run on a previous xml file with specific values --> 
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    version="2.0">
+    <xsl:output method="xml" indent="yes"/>
+    
+    <!-- Root template -->
+    <xsl:template match="/">
+        <STEP-ProductInformation ContextID="root_of_context" WorkspaceID="Main">
+            <AttributeList>
+                <xsl:for-each select="//RowElement">
+                    <!-- Replace spaces with underscores & enforce 40-character limit -->
+                    <xsl:variable name="name" select="translate(Name, ' ', '_')"/>
+                    <xsl:variable name="truncatedName" select="substring($name, 1, 40)"/>
+                    
+                    <!-- Ensure ID length does not exceed 40 characters -->
+                    <xsl:variable name="attributeID" select="concat('IDPrefix', $truncatedName)"/>
+                    <xsl:variable name="finalID" select="substring($attributeID, 1, 40)"/>
+                    
+                    <!-- Extract Simus IDs -->
+                    <xsl:variable name="sId1" select="normalize-space(SId1)"/>
+                    <xsl:variable name="sId2" select="normalize-space(SId2)"/>
+                    <xsl:variable name="separator" select="normalize-space(Separator)"/>
+                    <xsl:variable name="key" select="normalize-space(KEYID)"/>
+                    
+                    <Attribute
+                        ID="{$finalID}"
+                        MultiValued="false"
+                        ProductMode="Normal"
+                        FullTextIndexed="false"
+                        ExternallyMaintained="false"
+                        Derived="true"
+                        Selected="true"
+                        Referenced="true"
+                        Mandatory="false">
+                        
+                        <Name>
+                            <xsl:value-of select="Name"/>
+                        </Name>
+                        
+                        <Validation
+                            BaseType="text"
+                            MinValue=""
+                            MaxValue=""
+                            MaxLength="100"
+                            InputMask=""/>
+                        
+                        <ValueTemplate>
+                            <xsl:text>&lt;derive expr="concatenate(simplevalue('</xsl:text>
+                            <xsl:value-of select="$sId1"/>
+                            <xsl:text>'),' </xsl:text>
+                            <xsl:choose>
+                                <xsl:when test="string-length($separator) > 0">
+                                    <xsl:value-of select="$separator"/>
+                                </xsl:when>
+                                <xsl:otherwise> x </xsl:otherwise> <!-- Default separator -->
+                            </xsl:choose>
+                            <xsl:text> ', simplevalue('</xsl:text>
+                            <xsl:value-of select="$sId2"/>
+                            <xsl:text>'))"/&gt;</xsl:text>
+                        </ValueTemplate>
+                        
+                        <AttributeGroupLink AttributeGroupID="attributeGroupID"/>
+                        <UserTypeLink UserTypeID="objecttype1"/>
+                        <UserTypeLink UserTypeID="objecttype2"/>
+                        
+                        <MetaData>
+                            <MultiValue AttributeID="attributetoUpdate">
+                                <Value>
+                                    <xsl:value-of select="$key"/>
+                                </Value>
+                            </MultiValue>
+                        </MetaData>
+                    </Attribute>
+                </xsl:for-each>
+            </AttributeList>
+        </STEP-ProductInformation>
+    </xsl:template>
+</xsl:stylesheet>
