@@ -1,0 +1,57 @@
+<-----! XSLT used to extract certain values from a xml(Excel converted to xml). Renaming of values for use in following process -----> 
+
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+    exclude-result-prefixes="ss"
+    version="2.0">
+    
+    <xsl:output method="xml" indent="yes"/>
+    
+    <!-- Define a key to group rows by unique combinations of Name, SimusId1, and SimusId2 -->
+    <xsl:key name="rowGroup" match="ss:Row"
+        use="concat(ss:Cell[2]/ss:Data, '|', ss:Cell[6]/ss:Data, '|', ss:Cell[8]/ss:Data)"/>
+    
+    <!-- Root template -->
+    <xsl:template match="/">
+        <TransformedRows>
+            <!-- Loop through each unique Row -->
+            <xsl:for-each select="//ss:Row[generate-id() = generate-id(key('rowGroup', concat(ss:Cell[2]/ss:Data, '|', ss:Cell[6]/ss:Data, '|', ss:Cell[8]/ss:Data))[1])]">
+                <RowElement>
+                    <!--  Correct Business Unit -->
+                    <BusinessUnit>
+                        <xsl:value-of select="ss:Cell[1]/ss:Data"/>
+                    </BusinessUnit>
+                    
+                    <!-- Name (product name) -->
+                    <Name>
+                        <xsl:value-of select="ss:Cell[2]/ss:Data"/>
+                    </Name>
+                    
+                    <!-- UKEYID -->
+                    <KEYID>
+                        <xsl:value-of select="ss:Cell[3]/ss:Data"/>
+                    </KEYID>
+                    
+                    <!-- SimusId1 (extracted from comment) -->
+                    <SId1>
+                        <xsl:value-of select="substring-before(ss:Cell[6]/ss:Data, ',')"/>
+                    </SId1>
+                    
+                    <!-- SimusId2 (extracted from comment) -->
+                    <SId2>
+                        <xsl:value-of select="substring-before(ss:Cell[8]/ss:Data, ',')"/>
+                    </SId2>                    
+                    <!-- Separator -->
+                    <Separator>
+                        <xsl:value-of select="ss:Cell[7]/ss:Data"/>
+                    </Separator>
+                    
+                    <!--  MPE Attribute Class (raw semicolon-separated string) -->
+                    <AttributeClass>
+                        <xsl:value-of select="ss:Cell[4]/ss:Data"/>
+                    </AttributeClass>
+                </RowElement>
+            </xsl:for-each>
+        </TransformedRows>
+    </xsl:template>
+</xsl:stylesheet>
