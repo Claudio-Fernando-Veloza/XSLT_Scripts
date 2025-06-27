@@ -1,0 +1,183 @@
+ <!-- Creating an HTML preview file using an xml input file, conversion of file types is done through an XSLT Template --> 
+
+<?xml version="1.0" encoding="UTF-8"?>
+<xsl:stylesheet version="2.0"
+    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+    xmlns:xhtml="http://www.w3.org/1999/xhtml"
+    exclude-result-prefixes="xhtml">
+    
+    <xsl:output method="html" indent="yes" encoding="UTF-8"/>
+    
+    <xsl:template match="/">
+        <html>
+            <head>
+                <title>Translation Overview</title>
+                <style>
+                    body {
+                    font-family: Arial, sans-serif;
+                    padding: 20px;
+                    }
+                    table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    margin-bottom: 40px;
+                    }
+                    th, td {
+                    border: 1px solid #ccc;
+                    padding: 8px;
+                    text-align: left;
+                    }
+                    th {
+                    background-color: #f2f2f2;
+                    }
+                    h2 {
+                    margin-top: 40px;
+                    border-bottom: 2px solid #000;
+                    padding-bottom: 5px;
+                    }
+                </style>
+            </head>
+            <body>
+                <h1>Translation Overview</h1>
+                
+                <!-- LOV Section -->
+                <xsl:if test="//ListOfValue">
+                    <h1>LOV Translation Overview</h1>
+                    <xsl:for-each select="//ListOfValue">
+                        <xsl:variable name="lovID" select="@ID"/>
+                        <xsl:variable name="lovName" select="Name/TranslatableText"/>
+                        <xsl:variable name="hasID" select="ValueGroup/Value[@ID]"/>
+                        
+                        <h2>
+                            <xsl:text>LOV: </xsl:text>
+                            <xsl:value-of select="$lovName"/>
+                            <xsl:if test="$lovID">
+                                <xsl:text> (</xsl:text>
+                                <xsl:value-of select="$lovID"/>
+                                <xsl:text>)</xsl:text>
+                            </xsl:if>
+                        </h2>
+                        
+                        <table>
+                            <tr>
+                                <xsl:if test="$hasID">
+                                    <th>Value ID</th>
+                                </xsl:if>
+                                <th>Translation Text</th>
+                            </tr>
+                            
+                            <xsl:choose>
+                                <xsl:when test="ValueGroup">
+                                    <xsl:for-each select="ValueGroup">
+                                        <tr>
+                                            <xsl:if test="$hasID">
+                                                <td><xsl:value-of select="Value[1]/@ID"/></td>
+                                            </xsl:if>
+                                            <td>
+                                                <xsl:choose>
+                                                    <xsl:when test="Value[@QualifierID='en-GB']/TranslatableText">
+                                                        <xsl:value-of select="Value[@QualifierID='en-GB']/TranslatableText"/>
+                                                    </xsl:when>
+                                                    <xsl:otherwise>
+                                                        <xsl:value-of select="Value/TranslatableText"/>
+                                                    </xsl:otherwise>
+                                                </xsl:choose>
+                                            </td>
+                                        </tr>
+                                    </xsl:for-each>
+                                </xsl:when>
+                                <xsl:otherwise>
+                                    <tr>
+                                        <xsl:if test="$hasID">
+                                            <td colspan="2"><i>No values defined</i></td>
+                                        </xsl:if>
+                                        <xsl:if test="not($hasID)">
+                                            <td><i>No values defined</i></td>
+                                        </xsl:if>
+                                    </tr>
+                                </xsl:otherwise>
+                            </xsl:choose>
+                        </table>
+                    </xsl:for-each>
+                </xsl:if>
+                
+                <!-- Attribute Section -->
+                <xsl:if test="//AttributeList/Attribute">
+                    <h1>Attribute Translation Overview</h1>
+                    <xsl:for-each select="//AttributeList/Attribute">
+                        <xsl:variable name="attrID" select="@ID"/>
+                        <xsl:variable name="attrName" select="Name/TranslatableText"/>
+                        
+                        <h2>
+                            <xsl:text>Attribute: </xsl:text>
+                            <xsl:value-of select="$attrName"/>
+                            <xsl:if test="$attrID">
+                                <xsl:text> (</xsl:text>
+                                <xsl:value-of select="$attrID"/>
+                                <xsl:text>)</xsl:text>
+                            </xsl:if>
+                        </h2>
+                        
+                        <table>
+                            <tr>
+                                <th>Qualifier</th>
+                                <th>Translation Text</th>
+                            </tr>
+                            
+                            <xsl:for-each select="MetaData/Value[@QualifierID]">
+                                <tr>
+                                    <td><xsl:value-of select="@QualifierID"/></td>
+                                    <td><xsl:value-of select="."/></td>
+                                </tr>
+                            </xsl:for-each>
+                        </table>
+                    </xsl:for-each>
+                </xsl:if>
+                
+                <!-- Product Section -->
+                <xsl:if test="//Products/Product">
+                    <h1>Product Translation Overview</h1>
+                    <xsl:for-each select="//Products/Product">
+                        <xsl:variable name="productID" select="@ID"/>
+                        <xsl:variable name="productName" select="Name"/>
+                        
+                        <h2>
+                            <xsl:text>Product: </xsl:text>
+                            <xsl:value-of select="$productName"/>
+                            <xsl:if test="$productID">
+                                <xsl:text> (</xsl:text>
+                                <xsl:value-of select="$productID"/>
+                                <xsl:text>)</xsl:text>
+                            </xsl:if>
+                        </h2>
+                        
+                        <table>
+                            <tr>
+                                <th>Attribute Name</th>
+                                <th>Qualifier</th>
+                                <th>Translation Text</th>
+                            </tr>
+                            
+                            <xsl:for-each select="Values/Value">
+                                <tr>
+                                    <td><xsl:value-of select="@AttributeName"/></td>
+                                    <td><xsl:value-of select="@QualifierID"/></td>
+                                    <td>
+                                        <xsl:choose>
+                                            <xsl:when test="TranslatableText">
+                                                <xsl:value-of select="TranslatableText"/>
+                                            </xsl:when>
+                                            <xsl:otherwise>
+                                                <xsl:value-of select="."/>
+                                            </xsl:otherwise>
+                                        </xsl:choose>
+                                    </td>
+                                </tr>
+                            </xsl:for-each>
+                        </table>
+                    </xsl:for-each>
+                </xsl:if>
+            </body>
+        </html>
+    </xsl:template>
+</xsl:stylesheet>
